@@ -1,0 +1,36 @@
+#include <SoftwareSerial.h>
+
+
+const byte xPin = A0;
+const byte yPin = A1;
+
+
+SoftwareSerial ss(4, 7);
+
+
+void setup()
+{
+  Serial.begin(115200);
+  ss.begin(9600);
+}
+
+
+void loop()
+{
+  static unsigned long timer = 0;
+  unsigned long interval = 1000;
+  if (millis() - timer >= interval)
+  {
+     timer = millis();
+     int motor_control1 = analogRead(xPin);
+     int motor_control2 = analogRead(yPin);
+     Serial.print("x value = ");
+     Serial.print(motor_control1);
+     Serial.print("   y value = ");
+     Serial.println(motor_control2);
+     char buffer[15];
+     snprintf(buffer, 14, "%d,%d", motor_control1, motor_control2);
+     Serial.println(buffer);
+     ss.println(buffer);
+  }
+}
