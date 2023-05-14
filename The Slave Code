@@ -1,0 +1,125 @@
+#include <SoftwareSerial.h>
+#define PWM_IN1 6
+#define PWM_IN2 5
+int motor1Value = 0;
+int motor2Value = 0;
+
+
+const byte numChars = 32;
+char receivedChars[numChars];   // an array to store the received data
+
+
+boolean newData = false;
+
+
+SoftwareSerial ss(2, 3);
+
+
+void setup()
+{
+  Serial.begin(115200);
+  ss.begin(9600);
+}
+
+
+void loop()
+{
+recvWithEndMarker();
+  //showNewData();
+  if (newData)
+  {
+     parseData();
+     displayData();
+     newData = false;
+  }
+}
+
+
+void recvWithEndMarker()
+{
+  static byte ndx = 0;
+  char endMarker = '\n';
+  char rc;
+
+
+  while (ss.available() > 0 && newData == false)
+  {
+     rc = ss.read();
+
+
+     if (rc != endMarker)
+     {
+        receivedChars[ndx] = rc;
+        ndx++;
+        if (ndx >= numChars)
+        {
+           ndx = numChars - 1;
+        }
+     }
+     else
+     {
+        receivedChars[ndx] = '\0'; // terminate the string
+        ndx = 0;
+        newData = true;
+     }
+  }
+}
+
+
+void showNewData()
+{
+  if (newData == true)
+  {
+     Serial.print("This just in ... ");
+     Serial.println(receivedChars);
+     //newData = false;
+  }
+}
+
+
+void parseData()
+{
+  char *strings[2]; // an array of pointers to the pieces of the above array after strtok()
+  char *ptr = NULL; byte index = 0;
+  ptr = strtok(receivedChars, ",");  // delimiter comma
+  while (ptr != NULL)
+  {
+     strings[index] = ptr;
+     index++;
+     ptr = strtok(NULL, ",");
+  }
+   // convert string data to numbers
+  motor1Value = atoi(strings[0]);
+  motor2Value = atoi(strings[1]);  
+}
+
+
+void displayData()
+{
+  Serial.print("x value = ");
+  Serial.print(motor1Value);
+  Serial.print("   y value = ");
+  Serial.print(motor2Value);
+ 
+  Serial.println(); // blank line 
+ if(motor1Value > 511){
+  digitalWrite(7,1);
+  analogWrite(PWM_IN1, (motor1Value - 511));
+  }
+if(motor2Value > 511){
+  digitalWrite(4,1);
+  analogWrite(PWM_IN2, (motor2Value - 511));
+  }
+
+
+
+
+if(motor1Value < 511){
+  digitalWrite(7,0);
+  analogWrite(PWM_IN1, (512 - motor1Value));
+  }
+if(motor2Value < 511){
+  digitalWrite(4,0);
+  analogWrite(PWM_IN2, (512 - motor2Value));
+  }
+}
